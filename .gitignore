@@ -6,3 +6,6 @@
 /build
 /captures
 .externalNativeBuild
+app/libs/
+app/src/main/java/com/example/iseongjae/.DS_Store
+app/src/main/res/drawable/
