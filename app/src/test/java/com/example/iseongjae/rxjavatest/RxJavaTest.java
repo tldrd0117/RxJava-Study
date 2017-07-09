@@ -28,6 +28,7 @@ import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.functions.Predicate;
+import io.reactivex.observables.ConnectableObservable;
 import io.reactivex.observables.GroupedObservable;
 
 /**
@@ -304,5 +305,38 @@ public class RxJavaTest {
                         print(s);
                     }
         });
+    }
+
+    @Test
+    public void observableMuliti(){
+        String[] strings = new String[]{"apple", "banana", "crop", "domain", "file"};
+        ConnectableObservable<String> obs = Observable.fromArray(strings)
+                .concatMap(new Function<String, ObservableSource<String>>() {
+                    @Override
+                    public ObservableSource<String> apply(@NonNull String s) throws Exception {
+                        System.out.println("org1 : "+s);
+                        return Observable.just(s);
+                    }
+                })
+                .publish();
+
+        obs.subscribe(new Consumer<String>() {
+            @Override
+            public void accept(@NonNull String s) throws Exception {
+                System.out.println("connect 1 : " + s);
+
+
+            }
+        });
+        obs.subscribe(new Consumer<String>() {
+            @Override
+            public void accept(@NonNull String s) throws Exception {
+                System.out.println("connect 2 : " + s);
+
+            }
+        });
+
+        obs.connect();
+
     }
 }
