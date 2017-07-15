@@ -1,7 +1,5 @@
 package com.example.iseongjae.rxjavatest;
 
-import android.util.Log;
-
 import org.junit.Test;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -32,14 +30,14 @@ import io.reactivex.observables.ConnectableObservable;
 import io.reactivex.observables.GroupedObservable;
 
 /**
- * Example local unit test, which will execute on the development machine (host).
- *
- * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
+ * Created by iseongjae on 2017. 7. 15..
  */
-public class RxJavaTest {
+
+public class JustLambda {
     public void print( String s ){
         System.out.println( s );
     }
+
     @Test
     public void observable() throws Exception {
         String hello = "hello";
@@ -235,16 +233,16 @@ public class RxJavaTest {
                         return s+"key";
                     }
                 }).subscribe(new Consumer<GroupedObservable<String, String>>() {
+            @Override
+            public void accept(@NonNull final GroupedObservable<String, String> objectStringGroupedObservable) throws Exception {
+                objectStringGroupedObservable.subscribe(new Consumer<String>() {
                     @Override
-                    public void accept(@NonNull final GroupedObservable<String, String> objectStringGroupedObservable) throws Exception {
-                        objectStringGroupedObservable.subscribe(new Consumer<String>() {
-                            @Override
-                            public void accept(@NonNull String value) throws Exception {
-                                print(objectStringGroupedObservable.getKey());
-                                print(value);
-                            }
-                        });
+                    public void accept(@NonNull String value) throws Exception {
+                        print(objectStringGroupedObservable.getKey());
+                        print(value);
                     }
+                });
+            }
         });
 
     }
@@ -259,11 +257,11 @@ public class RxJavaTest {
                         return s.length() < 7;
                     }
                 }).subscribe(new Consumer<Boolean>() {
-                    @Override
-                    public void accept(@NonNull Boolean aBoolean) throws Exception {
-                        print("result : "+aBoolean);
-                    }
-                });
+            @Override
+            public void accept(@NonNull Boolean aBoolean) throws Exception {
+                print("result : "+aBoolean);
+            }
+        });
 
     }
 
@@ -302,7 +300,7 @@ public class RxJavaTest {
                     public void accept(@NonNull String s) throws Exception {
                         print(s);
                     }
-        });
+                });
     }
 
     @Test
