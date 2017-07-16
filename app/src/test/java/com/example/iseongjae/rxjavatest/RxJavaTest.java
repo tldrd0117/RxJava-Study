@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -20,8 +21,10 @@ import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.ObservableSource;
 import io.reactivex.Observer;
+import io.reactivex.Scheduler;
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.BiFunction;
@@ -30,6 +33,7 @@ import io.reactivex.functions.Function;
 import io.reactivex.functions.Predicate;
 import io.reactivex.observables.ConnectableObservable;
 import io.reactivex.observables.GroupedObservable;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -333,5 +337,120 @@ public class RxJavaTest {
 
         obs.connect();
 
+    }
+
+
+
+    @Test
+    public void test(){
+        Observable.just("path")
+                .concatMap(new Function<String, ObservableSource<String>>() {
+                    @Override
+                    public ObservableSource<String> apply(String s) throws Exception {
+                        return fileProcess(s).switchIfEmpty(Observable.just("fileProcessFail"));
+                    }
+                })
+                .concatMap(new Function<String, ObservableSource<String>>() {
+                    @Override
+                    public ObservableSource<String> apply(String s) throws Exception {
+                        return auth(s).switchIfEmpty(Observable.just(s+":authProcessFail"));
+                    }
+                })
+                .concatMap(new Function<String, ObservableSource<String>>() {
+                    @Override
+                    public ObservableSource<String> apply(String r) throws Exception {
+                        return issue(r).switchIfEmpty(Observable.just(r+":issueProcessFail"));
+                    }
+                })
+                .subscribe(new Observer<String>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(String s) {
+                        print(s);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+
+        List<String> paths = new ArrayList<>();
+        paths.add("path1");
+        paths.add("path2");
+        paths.add("path3");
+        paths.add("path4");
+        paths.add("path5");
+
+        Observable.fromIterable(paths)
+                .concatMap(new Function<String, ObservableSource<String>>() {
+                    @Override
+                    public ObservableSource<String> apply(String s) throws Exception {
+                        return fileProcess(s).switchIfEmpty(Observable.just("fileProcessFail"));
+                    }
+                })
+                .concatMap(new Function<String, ObservableSource<String>>() {
+                    @Override
+                    public ObservableSource<String> apply(String s) throws Exception {
+                        return auth(s).switchIfEmpty(Observable.just(s+":authProcessFail"));
+                    }
+                })
+                .concatMap(new Function<String, ObservableSource<String>>() {
+                    @Override
+                    public ObservableSource<String> apply(String r) throws Exception {
+                        return issue(r).switchIfEmpty(Observable.just(r+":issueProcessFail"));
+                    }
+                })
+                .subscribe(new Observer<String>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(String s) {
+                        print(s);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+
+    }
+
+    public Observable<String> fileProcess(String path){
+        return Observable.just(path+":fileProcess");
+    }
+
+    public Observable<String> auth(String file){
+        boolean auth = true;
+        if(auth)
+            return Observable.just(file+":auth");
+        else
+            return Observable.empty();
+    }
+
+    public Observable<String> issue(String auth){
+        boolean issue = true;
+        if(issue)
+            return Observable.just(auth+":issue");
+        else
+            return Observable.empty();
     }
 }

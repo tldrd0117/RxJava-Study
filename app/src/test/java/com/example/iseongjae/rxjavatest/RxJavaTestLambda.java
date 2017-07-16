@@ -2,7 +2,10 @@ package com.example.iseongjae.rxjavatest;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Completable;
@@ -10,14 +13,17 @@ import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
+import io.reactivex.Scheduler;
 import io.reactivex.Single;
 import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.functions.Predicate;
 import io.reactivex.observables.ConnectableObservable;
 import io.reactivex.observables.GroupedObservable;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * Created by iseongjae on 2017. 7. 15..
@@ -188,4 +194,57 @@ public class RxJavaTestLambda {
         obs.connect();
 
     }
+
+    @Test
+    public void test(){
+        System.out.println("hello");
+        Observable.just("path")
+                .concatMap( (String s) -> fileProcess(s).switchIfEmpty(Observable.just("fileProcessFail")) )
+                .concatMap( (String s) -> auth(s).switchIfEmpty(Observable.just("AuthProcessFail")) )
+                .concatMap( (String s) -> issue(s).switchIfEmpty(Observable.just("issueProcessFail")) )
+                .subscribe(
+                        (System.out::println),
+                        (Throwable::printStackTrace),
+                        () ->{},
+                        (disposable -> {})
+                );
+        List<String> paths = new ArrayList<>();
+        paths.add("path1");
+        paths.add("path2");
+        paths.add("path3");
+        paths.add("path4");
+        paths.add("path5");
+
+        Observable.fromIterable(paths)
+                .concatMap( (String s) -> fileProcess(s).switchIfEmpty(Observable.just("fileProcessFail")) )
+                .concatMap( (String s) -> auth(s).switchIfEmpty(Observable.just("AuthProcessFail")) )
+                .concatMap( (String s) -> issue(s).switchIfEmpty(Observable.just("issueProcessFail")) )
+                .subscribe(
+                        (System.out::println),
+                        (Throwable::printStackTrace),
+                        () ->{},
+                        (disposable -> {})
+                );
+    }
+
+    public Observable<String> fileProcess(String path){
+        return Observable.just(path+":fileProcess");
+    }
+
+    public Observable<String> auth(String file){
+        boolean auth = true;
+        if(auth)
+            return Observable.just(file+":auth");
+        else
+            return Observable.empty();
+    }
+
+    public Observable<String> issue(String auth){
+        boolean issue = true;
+        if(issue)
+            return Observable.just(auth+":issue");
+        else
+            return Observable.empty();
+    }
+
 }
