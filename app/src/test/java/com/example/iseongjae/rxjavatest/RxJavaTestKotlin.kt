@@ -92,25 +92,22 @@ class RxJavaTestKotlin {
     fun observableGroupBy() {
         val strings = arrayOf("apple", "banana", "crop", "domain", "file")
         Observable.fromIterable(Arrays.asList(*strings))
-                .groupBy { s -> s + "key" }.subscribe { objectStringGroupedObservable ->
-            objectStringGroupedObservable.subscribe { value ->
-                print(objectStringGroupedObservable.getKey())
-                print(value)
-            }
+                .groupBy { s -> s + "key" }
+                .subscribe { objectStringGroupedObservable ->
+                    objectStringGroupedObservable.subscribe { value ->
+                        print(objectStringGroupedObservable.getKey())
+                        print(value)
+                }
         }
 
     }
 
     @Test
     fun observableAll() {
-//        val strings = arrayOf("apple", "banana", "crop", "domain", "file")
-//        Observable.fromIterable(Arrays.asList(*strings))
-//                .all { s -> s.length < 7 }.subscribe(object : Consumer<Boolean> {
-//            @Throws(Exception::class)
-//            override fun accept(@NonNull aBoolean: Boolean?) {
-//                print("result : " + aBoolean!!)
-//            }
-//        })
+        val strings = arrayOf("apple", "banana", "crop", "domain", "file")
+        Observable.fromIterable(Arrays.asList(*strings))
+                .all { s -> s.length < 7 }
+                .subscribeBy { println(it) }
 
     }
 

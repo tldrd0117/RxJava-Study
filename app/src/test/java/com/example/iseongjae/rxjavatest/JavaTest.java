@@ -1,9 +1,16 @@
 package com.example.iseongjae.rxjavatest;
 
+import android.os.Handler;
+import android.support.annotation.MainThread;
+
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import io.reactivex.Observable;
 
@@ -14,7 +21,7 @@ import io.reactivex.Observable;
 public class JavaTest {
     @Test
     public void test(){
-        String path = "/path/";
+        String path = "path";
         fileProcess(path, new NewRunnable() {
             @Override
             public void run(String val) {
@@ -32,30 +39,54 @@ public class JavaTest {
             }
         });
 
-        List<String> paths = new ArrayList<>();
-        paths.add("path1");
-        paths.add("path2");
-        paths.add("path3");
-        paths.add("path4");
-        paths.add("path5");
+        ExecutorService executorService = Executors.newFixedThreadPool(5);
+        ExecutorService singleService = Executors.newSingleThreadExecutor();
+
+        List<String> paths = Arrays.asList("path1", "path2", "path3", "path4", "path5");
 
         for( String path2 : paths ) {
-            fileProcess(path2, new NewRunnable() {
+            executorService.submit(new Runnable() {
                 @Override
-                public void run(String val) {
-                    auth(val, new NewRunnable() {
+                public void run() {
+                    System.out.println(Thread.currentThread().getName());
+                    fileProcess(path2, new NewRunnable() {
                         @Override
                         public void run(String val) {
-                            issue(val, new NewRunnable() {
+                            singleService.submit(new Runnable() {
                                 @Override
-                                public void run(String val) {
-                                    System.out.println(val);
+                                public void run() {
+                                    System.out.println("main : " + Thread.currentThread().getName());
                                 }
                             });
+                            auth(val, new NewRunnable() {
+                                @Override
+                                public void run(String val) {
+                                    singleService.submit(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            System.out.println("main : " + Thread.currentThread().getName());
+                                        }
+                                    });
+                                    issue(val, new NewRunnable() {
+                                        @Override
+                                        public void run(String val) {
+                                            singleService.submit(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    System.out.println("main : " + Thread.currentThread().getName());
+                                                }
+                                            });
+                                            System.out.println(val);
+                                        }
+                                    });
+                                }
+                            });
+
                         }
                     });
                 }
             });
+
         }
 
 

@@ -125,19 +125,12 @@ public class RxJavaTestLambda {
 
     @Test
     public void observableAll(){
+        //ean test(@NonNull String s) throws Exception {
+//        return s.length() < 7
         String[] strings = new String[]{"apple", "banana", "crop", "domain", "file"};
         Observable.fromIterable(Arrays.asList(strings))
-                .all(new Predicate<String>() {
-                    @Override
-                    public boolean test(@NonNull String s) throws Exception {
-                        return s.length() < 7;
-                    }
-                }).subscribe(new Consumer<Boolean>() {
-            @Override
-            public void accept(@NonNull Boolean aBoolean) throws Exception {
-                print("result : "+aBoolean);
-            }
-        });
+                .all(s -> s.length() < 7)
+                .subscribe( s -> print("result : " + s) );
 
     }
 
@@ -197,28 +190,40 @@ public class RxJavaTestLambda {
 
     @Test
     public void test(){
-        System.out.println("hello");
         Observable.just("path")
-                .concatMap( (String s) -> fileProcess(s).switchIfEmpty(Observable.just("fileProcessFail")) )
-                .concatMap( (String s) -> auth(s).switchIfEmpty(Observable.just("AuthProcessFail")) )
-                .concatMap( (String s) -> issue(s).switchIfEmpty(Observable.just("issueProcessFail")) )
+                .concatMap( (String s) ->
+                     fileProcess(s).switchIfEmpty(Observable.just("fileProcessFail").observeOn(Schedulers.io()))
+                )
+                .concatMap( (String s) ->
+                     auth(s).switchIfEmpty(Observable.just("AuthProcessFail").observeOn(Schedulers.io()))
+                 )
+                .concatMap( (String s) ->
+                    issue(s).switchIfEmpty(Observable.just("issueProcessFail").observeOn(Schedulers.io()))
+                 )
                 .subscribe(
                         (System.out::println),
                         (Throwable::printStackTrace),
                         () ->{},
                         (disposable -> {})
                 );
-        List<String> paths = new ArrayList<>();
-        paths.add("path1");
-        paths.add("path2");
-        paths.add("path3");
-        paths.add("path4");
-        paths.add("path5");
 
+
+        List<String> paths = Arrays.asList("path1", "path2", "path3", "path4", "path5");
         Observable.fromIterable(paths)
-                .concatMap( (String s) -> fileProcess(s).switchIfEmpty(Observable.just("fileProcessFail")) )
-                .concatMap( (String s) -> auth(s).switchIfEmpty(Observable.just("AuthProcessFail")) )
-                .concatMap( (String s) -> issue(s).switchIfEmpty(Observable.just("issueProcessFail")) )
+                .concatMap( (String s) -> {
+                    System.out.println("fileProcess:             "+Thread.currentThread().getName());
+                    return fileProcess(s).switchIfEmpty(Observable.just("fileProcessFail").observeOn(Schedulers.io()));
+                } )
+                .concatMap( (String s) -> {
+                    System.out.println("auth:             "+Thread.currentThread().getName());
+                    return auth(s).switchIfEmpty(Observable.just("AuthProcessFail").observeOn(Schedulers.io()));
+                } )
+                .concatMap( (String s) -> {
+                    System.out.println("issue:             "+Thread.currentThread().getName());
+                    return issue(s).switchIfEmpty(Observable.just("issueProcessFail").observeOn(Schedulers.io()));
+                } )
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.single())
                 .subscribe(
                         (System.out::println),
                         (Throwable::printStackTrace),
@@ -228,13 +233,26 @@ public class RxJavaTestLambda {
     }
 
     public Observable<String> fileProcess(String path){
-        return Observable.just(path+":fileProcess");
+        return Observable.just(path+":fileProcess")
+                .observeOn(Schedulers.single())
+                .concatMap( (String s) -> {
+                    System.out.println(Thread.currentThread().getName());
+                    return Observable.just(s);
+                })
+                .observeOn(Schedulers.io());
     }
 
     public Observable<String> auth(String file){
         boolean auth = true;
         if(auth)
-            return Observable.just(file+":auth");
+            return Observable.just(file+":auth")
+                    .observeOn(Schedulers.single())
+                    .concatMap( (String s) -> {
+                        System.out.println(Thread.currentThread().getName());
+                        return Observable.just(s);
+                    })
+                    .observeOn(Schedulers.io());
+
         else
             return Observable.empty();
     }
@@ -242,7 +260,14 @@ public class RxJavaTestLambda {
     public Observable<String> issue(String auth){
         boolean issue = true;
         if(issue)
-            return Observable.just(auth+":issue");
+            return Observable.just(auth+":issue")
+                    .observeOn(Schedulers.single())
+                    .concatMap( (String s) -> {
+                        System.out.println(Thread.currentThread().getName());
+                        return Observable.just(s);
+                    })
+                    .observeOn(Schedulers.io());
+
         else
             return Observable.empty();
     }

@@ -3,31 +3,21 @@ package com.example.iseongjae.rxjavatest;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * Created by iseongjae on 2017. 7. 16..
  */
 
-public class LamdaTest {
+public class LambdaTest {
 
     @Test
     public void test(){
-        String path = "/path/";
-
+        String path = "path";
         fileProcess(path, (val -> auth(val, (val1 -> issue(val1, System.out::println)))));
-
-        List<String> paths = new ArrayList<>();
-        paths.add("path1");
-        paths.add("path2");
-        paths.add("path3");
-        paths.add("path4");
-        paths.add("path5");
-
+        List<String> paths = Arrays.asList("path1", "path2", "path3", "path4", "path5");
         paths.forEach( (s) -> fileProcess(s, (val -> auth(val, (val1 -> issue(val1, System.out::println))))));
-
-
-
     }
 
     public String fileProcess(String path, JavaTest.NewRunnable completion){

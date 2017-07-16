@@ -384,32 +384,31 @@ public class RxJavaTest {
                     }
                 });
 
-        List<String> paths = new ArrayList<>();
-        paths.add("path1");
-        paths.add("path2");
-        paths.add("path3");
-        paths.add("path4");
-        paths.add("path5");
-
+        List<String> paths = Arrays.asList("path1", "path2", "path3", "path4", "path5");
         Observable.fromIterable(paths)
                 .concatMap(new Function<String, ObservableSource<String>>() {
                     @Override
                     public ObservableSource<String> apply(String s) throws Exception {
-                        return fileProcess(s).switchIfEmpty(Observable.just("fileProcessFail"));
+                        System.out.println("fileProcess:             "+Thread.currentThread().getName());
+                        return fileProcess(s).switchIfEmpty(Observable.just("fileProcessFail")).observeOn(Schedulers.io());
                     }
                 })
                 .concatMap(new Function<String, ObservableSource<String>>() {
                     @Override
                     public ObservableSource<String> apply(String s) throws Exception {
-                        return auth(s).switchIfEmpty(Observable.just(s+":authProcessFail"));
+                        System.out.println("auth:            "+Thread.currentThread().getName());
+                        return auth(s).switchIfEmpty(Observable.just(s+":authProcessFail")).observeOn(Schedulers.io());
                     }
                 })
                 .concatMap(new Function<String, ObservableSource<String>>() {
                     @Override
                     public ObservableSource<String> apply(String r) throws Exception {
-                        return issue(r).switchIfEmpty(Observable.just(r+":issueProcessFail"));
+                        System.out.println("issue:           "+Thread.currentThread().getName());
+                        return issue(r).switchIfEmpty(Observable.just(r+":issueProcessFail")).observeOn(Schedulers.io());
                     }
                 })
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.single())
                 .subscribe(new Observer<String>() {
                     @Override
                     public void onSubscribe(Disposable d) {
@@ -435,13 +434,31 @@ public class RxJavaTest {
     }
 
     public Observable<String> fileProcess(String path){
-        return Observable.just(path+":fileProcess");
+        return Observable.just(path+":fileProcess")
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.single())
+                .concatMap(new Function<String, ObservableSource<String>>() {
+                    @Override
+                    public ObservableSource<String> apply(@NonNull String s) throws Exception {
+                        System.out.println(Thread.currentThread().getName());
+                        return Observable.just(s);
+                    }
+                });
     }
 
     public Observable<String> auth(String file){
         boolean auth = true;
         if(auth)
-            return Observable.just(file+":auth");
+            return Observable.just(file+":auth")
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(Schedulers.single())
+                    .concatMap(new Function<String, ObservableSource<String>>() {
+                        @Override
+                        public ObservableSource<String> apply(@NonNull String s) throws Exception {
+                            System.out.println(Thread.currentThread().getName());
+                            return Observable.just(s);
+                        }
+                    });
         else
             return Observable.empty();
     }
@@ -449,7 +466,16 @@ public class RxJavaTest {
     public Observable<String> issue(String auth){
         boolean issue = true;
         if(issue)
-            return Observable.just(auth+":issue");
+            return Observable.just(auth+":issue")
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(Schedulers.single())
+                    .concatMap(new Function<String, ObservableSource<String>>() {
+                        @Override
+                        public ObservableSource<String> apply(@NonNull String s) throws Exception {
+                            System.out.println(Thread.currentThread().getName());
+                            return Observable.just(s);
+                        }
+                    });
         else
             return Observable.empty();
     }
